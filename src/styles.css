@@ -1,0 +1,77 @@
+:root{
+  --fondo:#F2EEE6; --crema:#F4EAD2; --papel:#FFFDF7; --borde:#D9CBA8; --tinta:#2A1F14;
+  --rojo:#C8102E; --rojo-osc:#8E0E22; --facha:#1F4FA3; --facha-osc:#17356E; --paquito:#6E1423;
+  --si:#1E7B3A; --gris:#4A4A4A;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--fondo);color:var(--tinta);font-family:Archivo,sans-serif;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit}
+.pantalla{width:100%;max-width:430px;min-height:100dvh;margin:0 auto;padding:16px 16px calc(16px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:14px;position:relative;overflow-x:hidden}
+.cab{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--tinta);padding-bottom:8px;min-height:30px}
+.cab .marca{font-family:Cinzel,serif;font-weight:700;font-size:17px;letter-spacing:1.5px}
+.cab .yo{font-family:Oswald,sans-serif;font-size:14px;display:flex;align-items:center;gap:8px}
+.titulo{font-family:Oswald,sans-serif;font-weight:500;font-size:22px;letter-spacing:1px;line-height:1.15}
+.nota{font-size:14px;line-height:1.45}
+.centro{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center}
+.btn{min-height:56px;border-radius:999px;border:0;background:var(--tinta);color:var(--crema);font-family:Oswald,sans-serif;font-weight:500;font-size:19px;letter-spacing:3px;cursor:pointer;box-shadow:0 4px 0 #0E0A06;display:flex;align-items:center;justify-content:center;text-decoration:none;transition:opacity .25s,transform .1s;padding:0 18px;width:100%}
+.btn:active{transform:translateY(2px);box-shadow:0 2px 0 #0E0A06}
+.btn:disabled{opacity:.35;cursor:default}
+.btn2{min-height:48px;border-radius:999px;background:transparent;color:var(--tinta);border:1.5px solid var(--tinta);font-family:Oswald,sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer;display:flex;align-items:center;justify-content:center;text-decoration:none;padding:0 16px;width:100%}
+.abajo{margin-top:auto;display:flex;flex-direction:column;gap:8px}
+.tag{color:#fff;font-family:Oswald,sans-serif;font-weight:500;letter-spacing:2px;border-radius:999px;display:inline-block}
+.tag-m{background:#111}.tag-f{background:var(--gris)}
+.rejilla3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.rejilla2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.nombre-btn{height:44px;cursor:pointer;font-size:15px;font-weight:600;border-radius:12px;background:var(--papel);border:1px solid var(--borde);transition:background .25s,color .25s,transform .25s;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 6px}
+.nombre-btn.sel{background:var(--gris);color:#fff;border-color:var(--gris);transform:scale(1.06)}
+.nombre-btn:disabled{opacity:.35;cursor:default;text-decoration:line-through}
+.chip{height:34px;display:flex;justify-content:space-between;align-items:center;gap:6px;background:var(--papel);border:1px solid var(--borde);padding:0 5px 0 10px;border-radius:12px;min-width:0}
+.chip>span:first-child{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pill{flex-shrink:0;color:var(--crema);font-family:Oswald,sans-serif;font-size:10px;letter-spacing:1px;padding:3px 7px;border-radius:999px}
+.error{background:#FBE3E3;color:var(--rojo-osc);border:1px solid #E7B4B4;border-radius:12px;padding:10px 12px;font-size:14px}
+.fuera-banda{background:#E5DFD3;border:1px dashed #8A7F6E;border-radius:12px;padding:6px 10px;font-size:13px;text-align:center}
+.sello-texto{font-family:Oswald,sans-serif;font-weight:500;font-size:26px;letter-spacing:2px;border:2.5px solid;border-radius:10px;padding:2px 14px}
+
+/* Animaciones */
+@keyframes entrar{0%{opacity:0;transform:perspective(400px) translateY(26px) rotateX(75deg)}70%{opacity:1;transform:perspective(400px) translateY(-3px) rotateX(-8deg)}100%{opacity:1;transform:none}}
+.entra{animation:entrar .55s cubic-bezier(.2,.8,.2,1) both}
+@keyframes aparecer{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.aparece{animation:aparecer .5s cubic-bezier(.2,.8,.2,1) both}
+@keyframes subir{0%{opacity:0;transform:translateY(40px)}100%{opacity:1;transform:none}}
+.sube{animation:subir .9s cubic-bezier(.2,.8,.2,1) both}
+@keyframes golpe{0%,100%{transform:rotate(0)}30%{transform:rotate(-38deg)}48%{transform:rotate(6deg)}60%{transform:rotate(0)}}
+.mazo{transform-box:fill-box;transform-origin:85% 85%;animation:golpe 1s ease-in-out 1s 2 both}
+@keyframes temblor{0%,100%{transform:none}50%{transform:translateY(1.5px)}}
+.tiembla{animation:temblor .12s linear 1.48s 2}
+@keyframes cinta{from{clip-path:inset(0 50% 0 50%)}to{clip-path:inset(0 0 0 0)}}
+.cinta{animation:cinta .8s cubic-bezier(.2,.8,.2,1) both}
+@keyframes latido{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+.late{animation:latido 1.4s ease-in-out infinite}
+.late-rapido{animation:latido .9s ease-in-out infinite}
+@keyframes sello{0%{opacity:0;transform:scale(2) rotate(-12deg)}70%{opacity:1;transform:scale(.95) rotate(-4deg)}100%{opacity:1;transform:rotate(-4deg)}}
+.sella{animation:sello .55s cubic-bezier(.2,.8,.2,1) both}
+@keyframes sello2{0%{opacity:0;transform:scale(1.8) rotate(-14deg)}100%{opacity:1;transform:rotate(-14deg)}}
+.sella2{animation:sello2 .35s ease-out both}
+@keyframes punto{0%,80%,100%{opacity:.2;transform:translateY(0)}40%{opacity:1;transform:translateY(-6px)}}
+.punto{width:10px;height:10px;border-radius:50%;background:var(--tinta);animation:punto 1.2s ease-in-out infinite}
+@keyframes mirar{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
+.mira{animation:mirar 2.4s ease-in-out infinite}
+@keyframes caer{0%{opacity:0;transform:translateY(-40px) scale(1.35) rotate(-6deg)}65%{opacity:1;transform:translateY(3px) scale(.96) rotate(1deg)}100%{opacity:1;transform:none}}
+.ley-nueva{animation:caer .7s cubic-bezier(.2,.8,.2,1) both}
+@keyframes papeleta{0%{opacity:0;transform:translateY(60px) rotate(8deg)}70%{opacity:1;transform:translateY(-6px) rotate(-1deg)}100%{opacity:1;transform:none}}
+.papeleta-entra{animation:papeleta .7s cubic-bezier(.2,.8,.2,1) both}
+@keyframes girarVoto{0%{opacity:0;transform:rotateY(90deg)}100%{opacity:1;transform:none}}
+.gira{animation:girarVoto .45s ease-out both}
+@keyframes repartir{0%{opacity:0;transform:translateY(80px) rotate(10deg)}100%{opacity:1;transform:none}}
+.reparte{animation:repartir .6s cubic-bezier(.2,.8,.2,1) both}
+@keyframes llegar{0%{opacity:0;transform:translate(-320px,-60px) rotate(-25deg) scale(.7)}70%{opacity:1;transform:translate(8px,0) rotate(3deg)}100%{opacity:1;transform:none}}
+.llega{animation:llegar .8s cubic-bezier(.2,.8,.2,1) both}
+@keyframes llegaSobre{0%{opacity:0;transform:translateY(120px) rotate(-6deg)}100%{opacity:1;transform:none}}
+.llega-sobre{animation:llegaSobre .7s cubic-bezier(.2,.8,.2,1) both}
+@keyframes girar3d{0%{transform:rotateY(180deg) scale(.85)}100%{transform:rotateY(0deg) scale(1)}}
+.gira3d{transform-style:preserve-3d;-webkit-transform-style:preserve-3d;animation:girar3d 1.3s cubic-bezier(.45,0,.25,1) .5s both}
+.cara{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.dorso{transform:rotateY(180deg)}
+@keyframes tachar{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.tacha{animation:tachar .5s ease-out .6s both;transform-origin:left center}
+@media (prefers-reduced-motion: reduce){*{animation-duration:.01ms!important;animation-delay:0s!important;transition-duration:.01ms!important}}
