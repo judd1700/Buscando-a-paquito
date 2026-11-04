@@ -8,6 +8,8 @@ interface Ctx { code: string; st: Estado; jug: Jugador[]; v: MiVista; hacer: Hac
 
 const vivos = (st: Estado) => (st.alive || []).map((a, i) => a ? i : -1).filter(i => i >= 0);
 const cuenta = (st: Estado, key: 'continues' | 'voted' | 'ready') => vivos(st).filter(i => (st[key] || []).includes(i)).length;
+// Votan los vivos menos el Ministro y el Funcionario propuestos
+const votantes = (st: Estado) => vivos(st).filter(i => i !== st.ministro && i !== st.nominee);
 
 function elegible(st: Estado, s: number) {
   if (!st.alive?.[s] || s === st.ministro) return false;
@@ -141,6 +143,11 @@ function Juego({ ctx, error }: { ctx: Ctx; error: string | null }) {
   const yo = v.seat;
   const vivo = !!st.alive?.[yo];
   const enSobres = st.phase === 'sobres' || st.phase === 'abiertos';
+  useEffect(() => {
+    const oscuro = !vivo && st.phase !== 'fin';
+    document.documentElement.classList.toggle('fuera', oscuro);
+    return () => document.documentElement.classList.remove('fuera');
+  }, [vivo, st.phase]);
   const [nueva, setNueva] = useState<Ley | null>(null);
   // Durante la animación de la ley, el tablero aún no la muestra
   const [ocultar, setOcultar] = useState<Ley | null>(null);
@@ -169,7 +176,7 @@ function Juego({ ctx, error }: { ctx: Ctx; error: string | null }) {
   else cuerpo = <div className="centro"><Puntos /></div>;
 
   return (
-    <div className="pantalla" style={{ filter: ph === 'eliminado' && st.power_target === yo ? 'grayscale(1)' : 'none' }}>
+    <div className={'pantalla' + (!vivo && ph !== 'fin' ? ' fuera' : '')}>
       <Cabecera yo={nom(yo)} extra={boton} />
       <Tableros rojas={rojas} fachas={fachas} fallidas={st.fallidas || 0} nueva={nueva} />
       {!vivo && ph !== 'fin' && !(ph === 'eliminado' && st.power_target === yo) && <div className="fuera-banda">Estás fuera de la partida: puedes mirar, pero ya no votas.</div>}
@@ -300,7 +307,7 @@ function Proponer({ ctx }: { ctx: Ctx }) {
       <div className="titulo" style={{ fontSize: 24 }}>{nombrar ? 'NOMBRA AL FUNCIONARIO' : 'ELIGE A TU FUNCIONARIO'}</div>
       {nombrar && <span className="nota">Esta vez no se vota: el que elijas gobierna contigo directamente.</span>}
       <ElegirNombre opciones={opciones} elegido={elegido} onPick={setElegido} />
-      {opciones.some(o => !o.ok) && <span style={{ fontSize: 12, color: '#6B5E4C' }}>Los nombres tachados no pueden ser Funcionario en este turno (formaban el último gobierno).</span>}
+      {opciones.some(o => !o.ok) && <span style={{ fontSize: 12, color: '#6B5E4C' }}>Los nombres tachados no pueden ser Funcionario en este turno (último gobierno o Funcionario recién rechazado).</span>}
       <div className="abajo">
         <button type="button" className="btn" style={{ background: '#111' }} disabled={elegido == null || enviando} onClick={async () => { setEnviando(true); await hacer('proponer', elegido); setEnviando(false); }}>{nombrar ? 'NOMBRAR FUNCIONARIO' : 'PROPONER GOBIERNO'}</button>
       </div>
@@ -314,7 +321,7 @@ function Papeleta({ si, onClick, tf, op, delay }: { si: boolean; onClick?: () =>
   return (
     <div className="papeleta-entra" style={{ animationDelay: delay }}>
       <button type="button" aria-label={si ? 'Votar SÍ' : 'Votar NO'} onClick={onClick} disabled={!onClick}
-        style={{ width: '100%', height: 200, background: '#FFFDF7', border: '1px solid #D9CBA8', boxShadow: '0 3px 8px rgba(60,40,20,0.15)', cursor: onClick ? 'pointer' : 'default', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', padding: '14px 6px', transition: 'transform .6s cubic-bezier(.2,.8,.2,1), opacity .4s', transform: tf, opacity: op, borderRadius: 12 }}>
+        style={{ width: '100%', height: 168, background: '#FFFDF7', border: '1px solid #D9CBA8', boxShadow: '0 3px 8px rgba(60,40,20,0.15)', cursor: onClick ? 'pointer' : 'default', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'space-between', padding: '14px 6px', transition: 'transform .6s cubic-bezier(.2,.8,.2,1), opacity .4s', transform: tf, opacity: op, borderRadius: 12 }}>
         <span style={{ fontFamily: 'Oswald,sans-serif', fontSize: 9, letterSpacing: 2 }}>PAPELETA DE VOTO</span>
         <span style={{ width: 52, height: 52, border: '2px solid ' + c, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <svg aria-hidden="true" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2.6"><path d={si ? 'M4 12.5l5 5L20 6' : 'M6 6l12 12M18 6L6 18'} /></svg>
@@ -338,27 +345,38 @@ function Gobierno({ ctx }: { ctx: Ctx }) {
 
 function Votar({ ctx }: { ctx: Ctx }) {
   const { st, v, hacer } = ctx;
-  const vivo = !!st.alive?.[v.seat];
+  const enGobierno = v.seat === st.ministro || v.seat === st.nominee;
+  const votaYo = !!st.alive?.[v.seat] && !enGobierno;
   const servidor = v.my_vote;
   const [local, setLocal] = useState<boolean | null>(null);
   const voto = local ?? (servidor == null ? null : servidor);
   const votar = async (si: boolean) => { if (voto != null) return; setLocal(si); await hacer('votar', si ? 1 : 0); };
   const tf = (si: boolean) => voto == null ? 'none' : voto === si ? `translateX(${si ? 'calc(50% + 6px)' : 'calc(-50% - 6px)'}) scale(1.05)` : 'translateY(30px) scale(.85)';
   const op = (si: boolean) => voto == null || voto === si ? 1 : 0;
+  const total = votantes(st).length;
+  const hechos = votantes(st).filter(i => (st.voted || []).includes(i)).length;
   return (
     <>
       <div className="titulo">GOBIERNO PROPUESTO</div>
       <Gobierno ctx={ctx} />
-      {vivo ? (
+      {votaYo ? (
         <div className="rejilla2" style={{ gap: 12, marginTop: 6 }}>
           <Papeleta si onClick={voto == null ? () => votar(true) : undefined} tf={tf(true)} op={op(true)} delay=".25s" />
           <Papeleta si={false} onClick={voto == null ? () => votar(false) : undefined} tf={tf(false)} op={op(false)} delay=".4s" />
         </div>
-      ) : <div className="centro"><Puntos /></div>}
-      <div className="entra" style={{ textAlign: 'center', fontFamily: 'Oswald,sans-serif', fontSize: 16, letterSpacing: 1 }}>
-        {voto != null ? `Has votado ${voto ? 'SÍ' : 'NO'} · ` : ''}Han votado {cuenta(st, 'voted')} de {vivos(st).length}
+      ) : (
+        <div className="centro" style={{ gap: 10 }}>
+          {enGobierno && <span className="aparece" style={{ fontFamily: 'Cinzel,serif', fontWeight: 700, fontSize: 20 }}>Tú no votas</span>}
+          <span className="aparece nota" style={{ maxWidth: 290 }}>{enGobierno ? 'El Gobierno propuesto no vota. Los demás deciden si gobernáis.' : 'Los votantes están decidiendo.'}</span>
+          <Puntos />
+        </div>
+      )}
+      <div className="abajo">
+        <div style={{ textAlign: 'center', fontFamily: 'Oswald,sans-serif', fontSize: 16, letterSpacing: 1 }}>
+          {voto != null && votaYo ? `Has votado ${voto ? 'SÍ' : 'NO'} · ` : ''}Han votado {hechos} de {total}
+        </div>
+        {voto == null && votaYo && <span style={{ textAlign: 'center', fontSize: 12, color: '#6B5E4C' }}>El Ministro y el Funcionario propuestos no votan. Si hay empate, el gobierno queda rechazado.</span>}
       </div>
-      {voto == null && vivo && <span style={{ textAlign: 'center', fontSize: 12, color: '#6B5E4C' }}>Si hay empate, el gobierno queda rechazado.</span>}
     </>
   );
 }

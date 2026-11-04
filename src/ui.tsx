@@ -17,19 +17,20 @@ export const COLOR: Record<Rol, string> = { facha: '#1F4FA3', rojo: '#C8102E', p
 export const NOMBRE_ROL: Record<Rol, string> = { facha: 'FACHA', rojo: 'ROJO', paquito: 'PAQUITO' };
 
 // Escala un bloque de ancho fijo (diseño a 358 px) al ancho del móvil
-export function Escalar({ w, h, children }: { w: number; h: number; children: ReactNode }) {
+export function Escalar({ w, h, max = 1.15, children }: { w: number; h: number; max?: number; children: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   const [k, setK] = useState(1);
+  const [x, setX] = useState(0);
   useLayoutEffect(() => {
     const el = ref.current; if (!el) return;
-    const medir = () => setK(Math.min(1.15, el.clientWidth / w));
+    const medir = () => { const kk = Math.min(max, el.clientWidth / w); setK(kk); setX((el.clientWidth - w * kk) / 2); };
     medir();
     const ro = new ResizeObserver(medir); ro.observe(el);
     return () => ro.disconnect();
-  }, [w]);
+  }, [w, max]);
   return (
     <div ref={ref} style={{ width: '100%', height: h * k, position: 'relative' }}>
-      <div style={{ width: w, height: h, transform: `scale(${k})`, transformOrigin: 'top left', position: 'absolute', left: 0, top: 0 }}>{children}</div>
+      <div style={{ width: w, height: h, transform: `scale(${k})`, transformOrigin: 'top left', position: 'absolute', left: x, top: 0 }}>{children}</div>
     </div>
   );
 }
@@ -85,7 +86,7 @@ export function Tableros({ rojas, fachas, fallidas, nueva }: { rojas: number; fa
     </div>
   );
   return (
-    <Escalar w={358} h={278}>
+    <Escalar w={358} h={278} max={0.84}>
       <div style={{ width: 358, display: 'flex', flexDirection: 'column', gap: 6, fontFamily: 'Oswald,sans-serif', color: '#2A1F14' }}>
         {camara(true, [0, 1, 2, 3, 4, 5].map(i => <Hueco key={i} on={i < rojas} roja n={i + 1} label={PODER[i]} icon={ICONO[i]} nueva={nueva === 'roja' && i === rojas - 1} />), `${rojas} DE 6 LEYES`)}
         {camara(false, [0, 1, 2, 3, 4].map(i => <Hueco key={i} on={i < fachas} roja={false} n={i + 1} label={i === 4 ? 'Ganan los Fachas' : ''} icon={i === 4 ? <CoronaLinea /> : null} nueva={nueva === 'facha' && i === fachas - 1} />), `${fachas} DE 5 LEYES`)}

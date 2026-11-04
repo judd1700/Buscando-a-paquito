@@ -116,6 +116,15 @@ begin
   return true;
 end $$;
 
+-- ¿Han votado ya todos los que votan? (vivos, menos el Ministro y el Funcionario propuestos)
+create or replace function _votes_done(st jsonb) returns boolean language sql immutable as $$
+  select not exists (
+    select 1 from jsonb_array_elements(st->'alive') with ordinality a(v, i)
+    where a.v = 'true'::jsonb and (a.i - 1)::int not in ((st->>'ministro')::int, (st->>'nominee')::int)
+      and not ((st->'voted') @> to_jsonb((a.i - 1)::int))
+  );
+$$;
+
 -- Aprueba una ley; devuelve el estado nuevo (sin decidir el poder todavía)
 create or replace function _enact(st jsonb, law text, crisis boolean) returns jsonb language plpgsql immutable as $$
 declare r int := (st->>'rojas')::int; f int := (st->>'fachas')::int;
@@ -267,7 +276,8 @@ begin
             st := st || jsonb_build_object('blocked', jsonb_build_array(st->'ministro', st->'nominee'), 'last_gov', '[]'::jsonb);
             st := _enact(st, law, true);
           else
-            st := _new_round(st);
+            -- El Funcionario rechazado no puede volver a proponerse en la siguiente votación
+            st := _new_round(st) || jsonb_build_object('blocked', jsonb_build_array(st->'nominee'));
           end if;
         end if;
       elsif ph = 'ley' then
@@ -306,12 +316,13 @@ begin
 
   -- Votar
   elsif p_action = 'votar' and ph = 'votar' then
+    if s in ((st->>'ministro')::int, (st->>'nominee')::int) then raise exception 'El Gobierno propuesto no vota'; end if;
     if (st->'voted') @> to_jsonb(s) then raise exception 'Ya has votado'; end if;
     update secrets set votes = votes || jsonb_build_object(s::text, p_arg = 1) where game_id = g returning * into sc;
     st := jsonb_set(st, '{voted}', (st->'voted') || to_jsonb(s));
-    if _all_in(st, 'voted') then
+    if _votes_done(st) then
       select count(*) into yes from jsonb_each(sc.votes) v where v.value = 'true'::jsonb;
-      elected := yes * 2 > _alive_count(st);
+      elected := yes * 2 > _alive_count(st) - 2;
       st := st || jsonb_build_object('phase','resultado','votes', sc.votes, 'elected', elected, 'continues','[]'::jsonb);
     end if;
 
