@@ -147,7 +147,7 @@ begin
   if not check_access(coalesce(p_access,'')) then raise exception 'Código de acceso incorrecto'; end if;
   if n < 5 or n > 15 then raise exception 'Hacen falta entre 5 y 15 votantes'; end if;
   loop
-    c := substr(translate(upper(encode(gen_random_bytes(6),'base64')),'+/=0O1IL','XYZ23456'),1,4);
+    c := substr(translate(upper(replace(gen_random_uuid()::text,'-','')),'01','XY'),1,4);
     exit when not exists (select 1 from games where code = c);
   end loop;
   insert into games(code, state) values (c, jsonb_build_object('phase','lobby','n',n)) returning id into g;
