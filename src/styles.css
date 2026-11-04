@@ -6,7 +6,7 @@
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--fondo);color:var(--tinta);font-family:Archivo,sans-serif;-webkit-tap-highlight-color:transparent}
 button{font:inherit;color:inherit}
-.pantalla{width:100%;max-width:430px;min-height:100dvh;margin:0 auto;padding:16px 16px calc(96px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:14px;position:relative;overflow-x:hidden}
+.pantalla{width:100%;max-width:430px;min-height:100dvh;margin:0 auto;padding:16px 16px calc(110px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:14px;position:relative;overflow-x:hidden}
 .cab{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--tinta);padding-bottom:8px;min-height:30px}
 .cab .marca{font-family:Cinzel,serif;font-weight:700;font-size:17px;letter-spacing:1.5px}
 .cab .yo{font-family:Oswald,sans-serif;font-size:14px;display:flex;align-items:center;gap:8px}
@@ -17,7 +17,7 @@ button{font:inherit;color:inherit}
 .btn:active{transform:translateY(2px);box-shadow:0 2px 0 #0E0A06}
 .btn:disabled{opacity:.35;cursor:default}
 .btn2{min-height:48px;border-radius:999px;background:transparent;color:var(--tinta);border:1.5px solid var(--tinta);font-family:Oswald,sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer;display:flex;align-items:center;justify-content:center;text-decoration:none;padding:0 16px;width:100%}
-.abajo{margin-top:auto;display:flex;flex-direction:column;gap:8px;position:sticky;bottom:calc(84px + env(safe-area-inset-bottom));z-index:10;padding-top:10px;background:linear-gradient(to bottom, rgba(242,238,230,0), var(--fondo) 12px)}
+.abajo{margin-top:auto;display:flex;flex-direction:column;gap:8px;padding-top:6px}
 /* Votante eliminado: todo en tonos grises oscuros */
 .pantalla.fuera{filter:grayscale(1) brightness(.62) contrast(1.1)}
 html.fuera,html.fuera body{background:#5E5A55}
@@ -78,3 +78,5 @@ html.fuera,html.fuera body{background:#5E5A55}
 @keyframes tachar{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 .tacha{animation:tachar .5s ease-out .6s both;transform-origin:left center}
 @media (prefers-reduced-motion: reduce){*{animation-duration:.01ms!important;animation-delay:0s!important;transition-duration:.01ms!important}}
+
+.tablero-ancho{margin:0 -10px}

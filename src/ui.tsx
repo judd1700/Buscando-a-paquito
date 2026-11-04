@@ -86,7 +86,7 @@ export function Tableros({ rojas, fachas, fallidas, nueva }: { rojas: number; fa
     </div>
   );
   return (
-    <Escalar w={358} h={278} max={0.84}>
+    <div className="tablero-ancho"><Escalar w={358} h={278} max={1.6}>
       <div style={{ width: 358, display: 'flex', flexDirection: 'column', gap: 6, fontFamily: 'Oswald,sans-serif', color: '#2A1F14' }}>
         {camara(true, [0, 1, 2, 3, 4, 5].map(i => <Hueco key={i} on={i < rojas} roja n={i + 1} label={PODER[i]} icon={ICONO[i]} nueva={nueva === 'roja' && i === rojas - 1} />), `${rojas} DE 6 LEYES`)}
         {camara(false, [0, 1, 2, 3, 4].map(i => <Hueco key={i} on={i < fachas} roja={false} n={i + 1} label={i === 4 ? 'Ganan los Fachas' : ''} icon={i === 4 ? <CoronaLinea /> : null} nueva={nueva === 'facha' && i === fachas - 1} />), `${fachas} DE 5 LEYES`)}
@@ -106,7 +106,7 @@ export function Tableros({ rojas, fachas, fallidas, nueva }: { rojas: number; fa
           </div>
         </div>
       </div>
-    </Escalar>
+    </Escalar></div>
   );
 }
 
