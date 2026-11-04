@@ -125,6 +125,18 @@ create or replace function _votes_done(st jsonb) returns boolean language sql im
   );
 $$;
 
+-- Si con las restricciones no queda nadie (pocos vivos), se puede proponer a cualquiera vivo menos al Ministro
+create or replace function _can_nominate(st jsonb, s int) returns boolean language plpgsql immutable as $$
+declare i int; hay boolean := false;
+begin
+  if _eligible(st, s) then return true; end if;
+  for i in 0..(st->>'n')::int - 1 loop
+    if _eligible(st, i) then hay := true; end if;
+  end loop;
+  if hay then return false; end if;
+  return s >= 0 and s < (st->>'n')::int and (st->'alive'->s)::boolean and s <> (st->>'ministro')::int;
+end $$;
+
 -- Aprueba una ley; devuelve el estado nuevo (sin decidir el poder todavía)
 create or replace function _enact(st jsonb, law text, crisis boolean) returns jsonb language plpgsql immutable as $$
 declare r int := (st->>'rojas')::int; f int := (st->>'fachas')::int;
@@ -154,7 +166,7 @@ language plpgsql security definer set search_path = public as $$
 declare g uuid; c text; n int := coalesce(array_length(p_names,1),0); i int; tok uuid;
 begin
   if not check_access(coalesce(p_access,'')) then raise exception 'Código de acceso incorrecto'; end if;
-  if n < 5 or n > 15 then raise exception 'Hacen falta entre 5 y 15 votantes'; end if;
+  if n < 4 or n > 15 then raise exception 'Hacen falta entre 4 y 15 votantes'; end if;
   loop
     c := substr(translate(upper(replace(gen_random_uuid()::text,'-','')),'01','XY'),1,4);
     exit when not exists (select 1 from games where code = c);
@@ -190,7 +202,7 @@ begin
    where ga.code = upper(p_code) and s.admin_token = p_admin_token and ga.state->>'phase' = 'lobby';
   if g is null then raise exception 'No puedes repartir esta partida'; end if;
   if exists (select 1 from players where game_id = g and not claimed) then raise exception 'Faltan votantes por entrar'; end if;
-  select f, r into nf, nr from (values (5,3,1),(6,4,1),(7,4,2),(8,5,2),(9,5,3),(10,6,3),(11,7,3),(12,7,4),(13,8,4),(14,8,5),(15,9,5)) v(k,f,r) where k = n;
+  select f, r into nf, nr from (values (4,2,1),(5,3,1),(6,4,1),(7,4,2),(8,5,2),(9,5,3),(10,6,3),(11,7,3),(12,7,4),(13,8,4),(14,8,5),(15,9,5)) v(k,f,r) where k = n;
   select array_agg(x order by random()) into rl from (
     select 'facha' x from generate_series(1,nf) union all select 'rojo' from generate_series(1,nr) union all select 'paquito'
   ) t;
@@ -298,9 +310,10 @@ begin
 
   -- Proponer Funcionario
   elsif p_action = 'proponer' and ph = 'nominar' and s = (st->>'ministro')::int then
-    if not _eligible(st, p_arg) then raise exception 'No puedes proponer a ese votante'; end if;
+    if not _can_nominate(st, p_arg) then raise exception 'No puedes proponer a ese votante'; end if;
     st := st || jsonb_build_object('nominee', p_arg, 'blocked', '[]'::jsonb);
-    if (st->>'skip_vote')::boolean then
+    -- Sin votación: poder de la 3.ª ley roja, o si solo quedan 2 vivos (nadie más puede votar)
+    if (st->>'skip_vote')::boolean or _alive_count(st) <= 2 then
       st := st || jsonb_build_object('skip_vote', false, 'funcionario', p_arg, 'appointed', true,
         'last_gov', jsonb_build_array(st->'ministro', p_arg), 'blocked','[]'::jsonb);
       if (st->>'rojas')::int >= 3 and sc.roles[p_arg + 1] = 'paquito' then

@@ -11,12 +11,18 @@ const cuenta = (st: Estado, key: 'continues' | 'voted' | 'ready') => vivos(st).f
 // Votan los vivos menos el Ministro y el Funcionario propuestos
 const votantes = (st: Estado) => vivos(st).filter(i => i !== st.ministro && i !== st.nominee);
 
-function elegible(st: Estado, s: number) {
+function elegibleEstricto(st: Estado, s: number) {
   if (!st.alive?.[s] || s === st.ministro) return false;
   if ((st.blocked || []).includes(s)) return false;
   const lg = st.last_gov || [];
   if (vivos(st).length > 5) return !lg.includes(s);
   return lg[1] !== s;
+}
+// Si con las restricciones no queda nadie (pocos vivos), vale cualquiera vivo menos el Ministro
+function elegible(st: Estado, s: number) {
+  if (elegibleEstricto(st, s)) return true;
+  if (vivos(st).some(i => elegibleEstricto(st, i))) return false;
+  return !!st.alive?.[s] && s !== st.ministro;
 }
 function siguienteMinistro(st: Estado) {
   const n = st.n, m = st.ministro ?? 0;
@@ -299,13 +305,13 @@ function Proponer({ ctx }: { ctx: Ctx }) {
   const { st, jug, hacer } = ctx;
   const [elegido, setElegido] = useState<number | null>(null);
   const [enviando, setEnviando] = useState(false);
-  const nombrar = !!st.skip_vote;
+  const nombrar = !!st.skip_vote || vivos(st).length <= 2;
   const opciones = jug.filter(j => st.alive?.[j.seat] && j.seat !== st.ministro).map(j => ({ seat: j.seat, name: j.name, ok: elegible(st, j.seat) }));
   return (
     <>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><Tag /><span style={{ fontSize: 14, fontWeight: 600 }}>{nombrar ? 'Poder de la 3.ª ley roja' : 'Eres tú'}</span></div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><Tag /><span style={{ fontSize: 14, fontWeight: 600 }}>{st.skip_vote ? 'Poder de la 3.ª ley roja' : nombrar ? 'Solo quedáis dos' : 'Eres tú'}</span></div>
       <div className="titulo" style={{ fontSize: 24 }}>{nombrar ? 'NOMBRA AL FUNCIONARIO' : 'ELIGE A TU FUNCIONARIO'}</div>
-      {nombrar && <span className="nota">Esta vez no se vota: el que elijas gobierna contigo directamente.</span>}
+      {nombrar && <span className="nota">{st.skip_vote ? 'Esta vez no se vota: el que elijas gobierna contigo directamente.' : 'Solo quedáis dos: no hay votación, gobernáis los dos.'}</span>}
       <ElegirNombre opciones={opciones} elegido={elegido} onPick={setElegido} />
       {opciones.some(o => !o.ok) && <span style={{ fontSize: 12, color: '#6B5E4C' }}>Los nombres tachados no pueden ser Funcionario en este turno (último gobierno o Funcionario recién rechazado).</span>}
       <div className="abajo">

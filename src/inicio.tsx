@@ -57,7 +57,7 @@ export function Inicio() {
         {!configurado && <div className="error">Versión de prueba: falta conectar la base de datos.</div>}
         <a className="btn" href="#/crear" style={{ fontSize: 20 }}>CREAR PARTIDA</a>
         <a className="btn2" href="#/codigo" style={{ minHeight: 50, fontSize: 17 }}>TENGO UN CÓDIGO</a>
-        <span style={{ textAlign: 'center', fontSize: 12, marginTop: 4 }}>De 5 a 15 votantes · cada uno con su móvil</span>
+        <span style={{ textAlign: 'center', fontSize: 12, marginTop: 4 }}>De 4 a 15 votantes · cada uno con su móvil</span>
       </div>
     </div>
   );
@@ -107,8 +107,8 @@ export function Crear() {
       </div>
       <Aviso msg={error} />
       <div className="abajo">
-        <span style={{ textAlign: 'center', fontSize: 13 }}>{lista.length < 5 ? `Faltan ${5 - lista.length} para poder empezar` : 'Ya podéis empezar'}</span>
-        <button type="button" className="btn" disabled={lista.length < 5 || enviando} onClick={siguiente}>{enviando ? 'CREANDO…' : 'SIGUIENTE'}</button>
+        <span style={{ textAlign: 'center', fontSize: 13 }}>{lista.length < 4 ? `Faltan ${4 - lista.length} para poder empezar` : 'Ya podéis empezar'}</span>
+        <button type="button" className="btn" disabled={lista.length < 4 || enviando} onClick={siguiente}>{enviando ? 'CREANDO…' : 'SIGUIENTE'}</button>
       </div>
     </div>
   );
